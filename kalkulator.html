@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Kalkulator Petualangan Kubus – Dwi Fatur Danis Raka</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* ============================================================
+           CSS VARIABLES & RESET
+           ============================================================ */
+        :root {
+            --bg-primary: #0b0e1a;
+            --bg-secondary: #151e2f;
+            --neon-primary: #00d4ff;
+            --neon-secondary: #7b2ffc;
+            --accent: #f0c94b;
+            --text-primary: #e0e8f0;
+            --text-secondary: #8a9bb5;
+            --glass-bg: rgba(20, 30, 50, 0.65);
+            --border-glow: 0 0 12px rgba(0, 212, 255, 0.3);
+            --shadow-heavy: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --radius: 16px;
+            --transition: 0.25s ease;
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --banner-bg: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(123, 47, 252, 0.05) 0%, transparent 50%);
+        }
+
+        /* ===== Light Theme ===== */
+        body.light {
+            --bg-primary: #e8edf5;
+            --bg-secondary: #d0d9e8;
+            --text-primary: #1a2535;
+            --text-secondary: #3a4a5e;
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --border-glow: 0 0 12px rgba(0, 120, 255, 0.2);
+            --shadow-heavy: 0 8px 32px rgba(0, 0, 0, 0.15);
+            --banner-bg: rgba(0, 0, 0, 0.05);
+        }
+
+        /* ============================================================
+           MAIN APP WRAPPER
+           ============================================================ */
+        .app {
+            width: 100%;
+            max-width: 880px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow-heavy), var(--border-glow);
+            padding: 20px 20px 12px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ============================================================
+           BANNER GAMBAR (4 IMAGE SLOTS)
+           ============================================================ */
+        .image-banner {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+            padding: 12px;
+            background: var(--banner-bg);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .image-slot {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16 / 10;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: var(--transition);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        .image-slot:hover {
+            transform: scale(1.02);
+            border-color: var(--neon-primary);
+            box-shadow: 0 0 24px rgba(0, 212, 255, 0.15);
+        }
+        .image-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .image-slot .slot-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            padding: 8px 10px 6px;
+            font-size: 0.55rem;
+            text-align: center;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        /* Fallback jika gambar tidak load */
+        .image-slot .fallback-icon {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 2.8rem;
+            color: var(--text-secondary);
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .image-slot img:not([src]), .image-slot img[src=""],
+        .image-slot img[src^="#"] {
+            display: none;
+        }
+        .image-slot img:not([src]) + .fallback-icon,
+        .image-slot img[src=""] + .fallback-icon,
+        .image-slot img[src^="#"] + .fallback-icon {
+            display: flex;
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo svg {
+            flex-shrink: 0;
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo-highlight {
+            font-weight: 300;
+            -webkit-text-fill-color: var(--accent);
+        }
+        .logo-sub {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            margin-left: 4px;
+            -webkit-text-fill-color: var(--text-secondary);
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.5px;
+        }
+        .mode-btn:hover {
+            border-color: var(--neon-primary);
+            color: var(--text-primary);
+        }
+        .mode-btn.active {
+            background: var(--neon-primary);
+            color: #0b0e1a;
+            border-color: var(--neon-primary);
+            box-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        .icon-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ============================================================
+           MAIN AREA
+           ============================================================ */
+        .main {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* ===== Knight Panel ===== */
+        .knight-panel {
+            flex: 0 0 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .knight-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .knight {
+            position: relative;
+            width: 80px;
+            height: 100px;
+            margin-bottom: 4px;
+        }
+        .knight-head {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+        }
+        .knight-helmet {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #3a4a6a, #1a2a3a);
+            border-radius: 30% 30% 10% 10% / 40% 40% 10% 10%;
+            border: 2px solid var(--neon-primary);
+            box-shadow: inset 0 -6px 0 #0a0e1a, 0 0 20px rgba(0, 212, 255, 0.2);
+            position: relative;
+        }
+        .helmet-top {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 16px;
+            background: var(--neon-secondary);
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+            border-radius: 4px 4px 0 0;
+        }
+        .helmet-face {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding-top: 16px;
+        }
+        .eye {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 12px var(--accent);
+            animation: glowEye 2s infinite alternate;
+        }
+        @keyframes glowEye {
+            0% {
+                opacity: 0.7;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+        .visor {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 6px;
+            background: var(--neon-primary);
+            border-radius: 4px;
+            opacity: 0.5;
+            filter: blur(2px);
+        }
+        .knight-body {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin-top: -8px;
+        }
+        .armor-chest {
+            width: 40px;
+            height: 30px;
+            background: linear-gradient(145deg, #2a3a5a, #1a2a3a);
+            border-radius: 8px 8px 0 0;
+            border: 1px solid var(--neon-secondary);
+            position: relative;
+        }
+        .armor-shield {
+            width: 16px;
+            height: 24px;
+            background: var(--neon-secondary);
+            clip-path: polygon(50% 0%, 100% 25%, 80% 100%, 20% 100%, 0% 25%);
+            opacity: 0.5;
+        }
+        .armor-sword {
+            width: 4px;
+            height: 28px;
+            background: var(--accent);
+            transform: rotate(15deg);
+            border-radius: 2px;
+            box-shadow: 0 0 8px var(--accent);
+            margin-left: 4px;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-primary);
+            border-radius: 50%;
+            animation: floatParticle 4s infinite alternate;
+            opacity: 0.3;
+        }
+        .particle:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-duration: 3.2s;
+        }
+        .particle:nth-child(2) {
+            top: 70%;
+            left: 80%;
+            animation-duration: 4.5s;
+        }
+        .particle:nth-child(3) {
+            top: 40%;
+            left: 90%;
+            animation-duration: 3.8s;
+        }
+        .particle:nth-child(4) {
+            top: 80%;
+            left: 5%;
+            animation-duration: 5.1s;
+        }
+        .particle:nth-child(5) {
+            top: 20%;
+            left: 70%;
+            animation-duration: 4.0s;
+        }
+        @keyframes floatParticle {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.2;
+            }
+            100% {
+                transform: translate(10px, -20px) scale(1.5);
+                opacity: 0.7;
+            }
+        }
+
+        .knight-speech {
+            width: 100%;
+            min-height: 32px;
+            margin: 4px 0;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 4px 8px;
+            border-left: 2px solid var(--neon-primary);
+        }
+        .speech-bubble {
+            display: block;
+        }
+
+        .knight-status {
+            width: 100%;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .xp-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-primary), var(--accent));
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        /* ============================================================
+           CALCULATOR
+           ============================================================ */
+        .calculator {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .display {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            transition: var(--transition);
+        }
+        .display-memory {
+            font-size: 0.6rem;
+            color: var(--accent);
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+        .display-expression {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: right;
+            min-height: 24px;
+            word-break: break-all;
+            transition: var(--transition);
+        }
+        .display-result {
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: right;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--text-primary), var(--neon-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            transition: var(--transition);
+        }
+        .display-mode {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            opacity: 0.4;
+            letter-spacing: 1px;
+        }
+
+        /* ===== Scientific / Programmer / Converter Panels ===== */
+        .sci-panel,
+        .prog-panel,
+        .conv-panel {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px 0 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 6px;
+        }
+        .sci-panel.active,
+        .prog-panel.active,
+        .conv-panel.active {
+            display: flex;
+        }
+        .sci-btn,
+        .prog-bit,
+        .prog-op,
+        .prog-base-btn,
+        .conv-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+        .sci-btn:hover,
+        .prog-bit:hover,
+        .prog-op:hover,
+        .prog-base-btn:hover,
+        .conv-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--neon-primary);
+            color: var(--text-primary);
+        }
+        .sci-btn.const {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        .prog-bit {
+            min-width: 32px;
+            text-align: center;
+        }
+        .prog-base-btn.active {
+            background: var(--neon-primary);
+            color: #0b0e1a;
+        }
+        .prog-ops {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .conv-panel {
+            flex-direction: column;
+            gap: 8px;
+        }
+        .conv-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .conv-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            flex: 1;
+            min-width: 80px;
+        }
+        .conv-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            width: 100px;
+        }
+        .conv-result {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-align: center;
+            padding: 6px;
+        }
+        .conv-arrow {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        /* ===== Keypad ===== */
+        .keypad {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .key-row {
+            display: flex;
+            gap: 6px;
+        }
+        .key {
+            flex: 1;
+            padding: 12px 0;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-height: 48px;
+        }
+        .key:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
+        }
+        .key:active {
+            transform: scale(0.96);
+        }
+        .key.num {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .key.op {
+            background: rgba(0, 212, 255, 0.08);
+            color: var(--neon-primary);
+        }
+        .key.op:hover {
+            background: rgba(0, 212, 255, 0.18);
+        }
+        .key.func {
+            background: rgba(123, 47, 252, 0.08);
+            color: var(--neon-secondary);
+        }
+        .key.func:hover {
+            background: rgba(123, 47, 252, 0.18);
+        }
+        .key.equals {
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+            color: #0b0e1a;
+            font-size: 1.4rem;
+            box-shadow: 0 0 24px rgba(0, 212, 255, 0.25);
+        }
+        .key.equals:hover {
+            box-shadow: 0 0 36px rgba(0, 212, 255, 0.45);
+            transform: scale(1.02);
+        }
+        .key.mem {
+            background: rgba(240, 201, 75, 0.06);
+            color: var(--accent);
+            font-size: 0.7rem;
+        }
+        .key.hist,
+        .key.settings-shortcut {
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+        .key.hist i,
+        .key.settings-shortcut i {
+            font-size: 0.8rem;
+        }
+
+        .keyboard-indicator {
+            text-align: right;
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            opacity: 0.4;
+            margin-top: 6px;
+            padding-right: 4px;
+        }
+
+        /* ============================================================
+           HISTORY PANEL
+           ============================================================ */
+        .history-overlay,
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+        }
+        .history-overlay.active,
+        .modal-overlay.active {
+            display: block;
+        }
+        .history-panel,
+        .modal {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 360px;
+            max-width: 90vw;
+            height: 100%;
+            background: var(--bg-secondary);
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            transition: right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .history-panel.active {
+            right: 0;
+        }
+        .history-header,
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .history-header h2,
+        .modal-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .history-close,
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .history-clear-all,
+        .danger-btn {
+            background: rgba(255, 70, 70, 0.1);
+            border: 1px solid rgba(255, 70, 70, 0.2);
+            color: #ff6b6b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .history-clear-all:hover,
+        .danger-btn:hover {
+            background: rgba(255, 70, 70, 0.2);
+        }
+        .history-list {
+            list-style: none;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .history-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px 12px;
+            border-radius: 10px;
+            border-left: 3px solid var(--neon-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .history-item .h-expr {
+            color: var(--text-secondary);
+        }
+        .history-item .h-result {
+            font-weight: 600;
+            color: var(--accent);
+        }
+        .history-item .h-del {
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .history-empty {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 30px 0;
+            font-style: italic;
+        }
+
+        /* ============================================================
+           SETTINGS MODAL
+           ============================================================ */
+        .modal {
+            right: auto;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            max-width: 92vw;
+            height: auto;
+            max-height: 80vh;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            display: none;
+            flex-direction: column;
+            padding: 24px;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .setting-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .setting-toggle {
+            display: flex;
+            gap: 6px;
+        }
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .toggle-btn.active {
+            background: var(--neon-primary);
+            color: #0b0e1a;
+            border-color: var(--neon-primary);
+        }
+        .setting-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            width: 100%;
+        }
+
+        /* ============================================================
+           ACHIEVEMENT TOAST
+           ============================================================ */
+        .achievement-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+            pointer-events: none;
+        }
+        .achievement-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .achievement-icon {
+            font-size: 2rem;
+        }
+        .achievement-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .achievement-title {
+            font-size: 0.6rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+        .achievement-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* ============================================================
+           LEVEL UP OVERLAY
+           ============================================================ */
+        .level-up-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+        .level-up-overlay.active {
+            display: flex;
+        }
+        .level-up-content {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 32px 48px;
+            text-align: center;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 60px rgba(240, 201, 75, 0.2);
+            animation: levelPulse 1s infinite alternate;
+        }
+        @keyframes levelPulse {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.02);
+            }
+        }
+        .level-up-icon {
+            font-size: 4rem;
+            margin-bottom: 8px;
+        }
+        .level-up-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+        .level-up-desc {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin: 6px 0;
+        }
+        .level-up-level {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--neon-primary);
+        }
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+        .footer {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .footer-left,
+        .footer-center,
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .footer-title {
+            color: var(--text-primary);
+        }
+        .footer-achievements {
+            font-size: 0.8rem;
+        }
+        .footer-version {
+            opacity: 0.4;
+        }
+        .footer-group {
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            background: rgba(240, 201, 75, 0.08);
+            padding: 2px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(240, 201, 75, 0.15);
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 780px) {
+            .image-banner {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 8px;
+            }
+            .image-slot {
+                aspect-ratio: 16 / 10;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .knight-panel {
+                flex: 1 1 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 10px;
+            }
+            .knight-container {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+            .knight {
+                width: 60px;
+                height: 80px;
+            }
+            .knight-speech {
+                flex: 1;
+                min-width: 120px;
+            }
+            .knight-status {
+                flex: 1;
+                min-width: 120px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .header-nav {
+                justify-content: center;
+            }
+            .header-actions {
+                justify-content: center;
+            }
+            .display-result {
+                font-size: 1.8rem;
+            }
+            .key {
+                min-height: 44px;
+                font-size: 1rem;
+            }
+            .history-panel {
+                width: 100%;
+                max-width: 100%;
+                right: -110%;
+            }
+            .modal {
+                width: 96vw;
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app {
+                padding: 12px;
+            }
+            .image-banner {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+                padding: 6px;
+            }
+            .image-slot .slot-label {
+                font-size: 0.45rem;
+                padding: 4px 6px 3px;
+            }
+            .key {
+                font-size: 0.9rem;
+                min-height: 40px;
+                border-radius: 8px;
+            }
+            .display-result {
+                font-size: 1.5rem;
+            }
+            .sci-btn,
+            .prog-bit,
+            .prog-op,
+            .prog-base-btn {
+                font-size: 0.6rem;
+                padding: 2px 8px;
+            }
+            .footer-group {
+                font-size: 0.55rem;
+                padding: 1px 8px;
+            }
+        }
+
+        /* Prefer reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app">
+        <!-- ============================================================
+        BANNER GAMBAR – 4 SLOT DENGAN URL GAMBAR
+        ============================================================ -->
+        <div class="image-banner">
+            <!-- GAMBAR 1 -->
+            <div class="image-slot">
+                <img
+                src="https://cdn.phototourl.com/free/2026-08-18-e1d29d8e-5d12-40d7-95ad-8e11bfc8821f.jpg"
+                alt="Gambar 1"
+                loading="lazy"
+                />
+                <div class="fallback-icon"><i class="fas fa-cube"></i></div>
+                <div class="slot-label">✦ Kubus Energi</div>
+            </div>
+
+            <!-- GAMBAR 2 -->
+            <div class="image-slot">
+                <img
+                src="https://cdn.phototourl.com/free/2026-08-18-3e63bad2-0048-4754-adce-a1895bdeaebe.jpg"
+                alt="Gambar 2"
+                loading="lazy"
+                />
+                <div class="fallback-icon"><i class="fas fa-gem"></i></div>
+                <div class="slot-label">✦ Kristal Violet</div>
+            </div>
+
+            <!-- GAMBAR 3 -->
+            <div class="image-slot">
+                <img
+                src="https://cdn.phototourl.com/free/2026-08-18-d3cd68cf-02ac-4d3e-80d8-dfe2551f277e.jpg"
+                alt="Gambar 3"
+                loading="lazy"
+                />
+                <div class="fallback-icon"><i class="fas fa-shield-halved"></i></div>
+                <div class="slot-label">✦ Perisai Emas</div>
+            </div>
+
+            <!-- GAMBAR 4 -->
+            <div class="image-slot">
+                <img
+                src="https://cdn.phototourl.com/free/2026-08-18-57b8cacf-afb8-48b2-90aa-885c2befcb52.jpg"
+                alt="Gambar 4"
+                loading="lazy"
+                />
+                <div class="fallback-icon"><i class="fas fa-sword"></i></div>
+                <div class="slot-label">✦ Pedang Legendaris</div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        HEADER
+        ============================================================ -->
+        <header class="header">
+            <div class="logo">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect x="2" y="2" width="32" height="32" rx="4" fill="var(--neon-primary)" opacity="0.25" />
+                    <rect x="6" y="6" width="24" height="24" rx="2" fill="var(--bg-secondary)" stroke="var(--neon-primary)" stroke-width="1.5" />
+                    <path d="M12 12L18 8L24 12V20L18 24L12 20V12Z" fill="var(--neon-primary)" opacity="0.8" />
+                    <path d="M16 14L18 12L20 14V18L18 20L16 18V14Z" fill="var(--bg-primary)" stroke="var(--accent)" stroke-width="0.8" />
+                    <circle cx="18" cy="18" r="2" fill="var(--accent)" />
+                </svg>
+                <span class="logo-text">CUBES<span class="logo-highlight">KNIGHT</span></span>
+                <span class="logo-sub">KALKULATOR</span>
+            </div>
+            <nav class="header-nav">
+                <button class="mode-btn active" data-mode="basic">DASAR</button>
+                <button class="mode-btn" data-mode="scientific">ILMIAH</button>
+                <button class="mode-btn" data-mode="programmer">PROGRAM</button>
+                <button class="mode-btn" data-mode="converter">KONVERSI</button>
+            </nav>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" aria-label="Ganti tema"><i class="fas fa-moon"></i></button>
+                <button class="icon-btn" id="soundToggle" aria-label="Suara"><i class="fas fa-volume-mute"></i></button>
+                <button class="icon-btn" id="settingsBtn" aria-label="Pengaturan"><i class="fas fa-cog"></i></button>
+            </div>
+        </header>
+
+        <!-- ============================================================
+        MAIN
+        ============================================================ -->
+        <div class="main">
+            <!-- Knight Panel -->
+            <aside class="knight-panel">
+                <div class="knight-container">
+                    <div class="knight" id="knightMascot">
+                        <div class="knight-head">
+                            <div class="knight-helmet">
+                                <div class="helmet-top"></div>
+                                <div class="helmet-face">
+                                    <div class="eye left-eye"></div>
+                                    <div class="eye right-eye"></div>
+                                    <div class="visor"></div>
+                                </div>
+                                <div class="helmet-crest"></div>
+                            </div>
+                            <div class="knight-body">
+                                <div class="armor-chest"></div>
+                                <div class="armor-shield"></div>
+                                <div class="armor-sword"></div>
+                            </div>
+                        </div>
+                        <div class="particles">
+                            <span class="particle"></span><span class="particle"></span><span class="particle"></span>
+                            <span class="particle"></span><span class="particle"></span>
+                        </div>
+                    </div>
+                    <div class="knight-speech" id="knightSpeech">
+                        <span class="speech-bubble">⚔ Siap, ksatria!</span>
+                    </div>
+                    <div class="knight-status">
+                        <span id="knightLevel">LEVEL 01</span>
+                        <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+                        <span id="xpText">0 / 100 XP</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Calculator -->
+            <section class="calculator">
+                <div class="display">
+                    <div class="display-memory" id="memoryIndicator">MEM: <span id="memoryValue">0</span></div>
+                    <div class="display-expression" id="expression">0</div>
+                    <div class="display-result" id="result">0</div>
+                    <div class="display-mode" id="displayMode">DASAR</div>
+                </div>
+
+                <!-- Scientific Panel -->
+                <div class="sci-panel" id="sciPanel">
+                    <button class="sci-btn" data-fn="sqrt">√</button>
+                    <button class="sci-btn" data-fn="square">x²</button>
+                    <button class="sci-btn" data-fn="cube">x³</button>
+                    <button class="sci-btn" data-fn="power">xʸ</button>
+                    <button class="sci-btn" data-fn="inverse">1/x</button>
+                    <button class="sci-btn" data-fn="sin">sin</button>
+                    <button class="sci-btn" data-fn="cos">cos</button>
+                    <button class="sci-btn" data-fn="tan">tan</button>
+                    <button class="sci-btn" data-fn="asin">asin</button>
+                    <button class="sci-btn" data-fn="acos">acos</button>
+                    <button class="sci-btn" data-fn="atan">atan</button>
+                    <button class="sci-btn" data-fn="log">log</button>
+                    <button class="sci-btn" data-fn="ln">ln</button>
+                    <button class="sci-btn" data-fn="exp">eˣ</button>
+                    <button class="sci-btn" data-fn="tenx">10ˣ</button>
+                    <button class="sci-btn" data-fn="factorial">x!</button>
+                    <button class="sci-btn" data-fn="mod">mod</button>
+                    <button class="sci-btn" data-fn="rand">rand</button>
+                    <button class="sci-btn" data-fn="abs">|x|</button>
+                    <button class="sci-btn const" data-fn="pi">π</button>
+                    <button class="sci-btn const" data-fn="euler">e</button>
+                    <button class="sci-btn const" data-fn="phi">φ</button>
+                </div>
+
+                <!-- Programmer Panel -->
+                <div class="prog-panel" id="progPanel">
+                    <div class="prog-bits" style="display:flex;flex-wrap:wrap;gap:4px;">
+                        <button class="prog-bit" data-bit="0">0</button><button class="prog-bit" data-bit="1">1</button>
+                        <button class="prog-bit" data-bit="2">2</button><button class="prog-bit" data-bit="3">3</button>
+                        <button class="prog-bit" data-bit="4">4</button><button class="prog-bit" data-bit="5">5</button>
+                        <button class="prog-bit" data-bit="6">6</button><button class="prog-bit" data-bit="7">7</button>
+                        <button class="prog-bit" data-bit="8">8</button><button class="prog-bit" data-bit="9">9</button>
+                        <button class="prog-bit" data-bit="A">A</button><button class="prog-bit" data-bit="B">B</button>
+                        <button class="prog-bit" data-bit="C">C</button><button class="prog-bit" data-bit="D">D</button>
+                        <button class="prog-bit" data-bit="E">E</button><button class="prog-bit" data-bit="F">F</button>
+                    </div>
+                    <div class="prog-ops">
+                        <button class="prog-op" data-op="AND">AND</button>
+                        <button class="prog-op" data-op="OR">OR</button>
+                        <button class="prog-op" data-op="XOR">XOR</button>
+                        <button class="prog-op" data-op="NOT">NOT</button>
+                        <button class="prog-op" data-op="SHL">SHL</button>
+                        <button class="prog-op" data-op="SHR">SHR</button>
+                    </div>
+                    <div class="prog-base">
+                        <button class="prog-base-btn" data-base="bin">BIN</button>
+                        <button class="prog-base-btn" data-base="oct">OCT</button>
+                        <button class="prog-base-btn active" data-base="dec">DEC</button>
+                        <button class="prog-base-btn" data-base="hex">HEX</button>
+                    </div>
+                </div>
+
+                <!-- Converter Panel -->
+                <div class="conv-panel" id="convPanel">
+                    <div class="conv-row">
+                        <select class="conv-select" id="convFrom">
+                            <option value="m">Meter</option><option value="km">Kilometer</option><option value="cm">Centimeter</option>
+                            <option value="mm">Millimeter</option><option value="mi">Mil</option><option value="ft">Kaki</option>
+                            <option value="in">Inci</option><option value="kg">Kilogram</option><option value="g">Gram</option>
+                            <option value="lb">Pound</option><option value="c">Celsius</option><option value="f">Fahrenheit</option>
+                            <option value="k">Kelvin</option><option value="l">Liter</option><option value="gal">Gallon</option>
+                            <option value="s">Detik</option><option value="min">Menit</option><option value="h">Jam</option>
+                            <option value="b">Byte</option><option value="kb">KB</option><option value="mb">MB</option>
+                            <option value="gb">GB</option><option value="j">Joule</option><option value="cal">Kalori</option>
+                        </select>
+                        <span class="conv-arrow">→</span>
+                        <select class="conv-select" id="convTo">
+                            <option value="m">Meter</option><option value="km">Kilometer</option><option value="cm">Centimeter</option>
+                            <option value="mm">Millimeter</option><option value="mi">Mil</option><option value="ft">Kaki</option>
+                            <option value="in">Inci</option><option value="kg">Kilogram</option><option value="g">Gram</option>
+                            <option value="lb">Pound</option><option value="c">Celsius</option><option value="f">Fahrenheit</option>
+                            <option value="k">Kelvin</option><option value="l">Liter</option><option value="gal">Gallon</option>
+                            <option value="s">Detik</option><option value="min">Menit</option><option value="h">Jam</option>
+                            <option value="b">Byte</option><option value="kb">KB</option><option value="mb">MB</option>
+                            <option value="gb">GB</option><option value="j">Joule</option><option value="cal">Kalori</option>
+                        </select>
+                    </div>
+                    <div class="conv-row">
+                        <input type="number" class="conv-input" id="convInput" placeholder="Nilai" value="1" />
+                        <button class="conv-btn" id="convConvert">KONVERSI</button>
+                    </div>
+                    <div class="conv-result" id="convResult">= 1.0000</div>
+                </div>
+
+                <!-- Keypad -->
+                <div class="keypad">
+                    <div class="key-row">
+                        <button class="key mem" data-action="mc">MC</button>
+                        <button class="key mem" data-action="mr">MR</button>
+                        <button class="key mem" data-action="mplus">M+</button>
+                        <button class="key mem" data-action="mminus">M−</button>
+                        <button class="key hist" id="historyBtn"><i class="fas fa-scroll"></i> RIWAYAT</button>
+                        <button class="key settings-shortcut" id="settingsShortcut"><i class="fas fa-cog"></i></button>
+                    </div>
+                    <div class="key-row">
+                        <button class="key num" data-value="7">7</button>
+                        <button class="key num" data-value="8">8</button>
+                        <button class="key num" data-value="9">9</button>
+                        <button class="key op" data-value="÷">÷</button>
+                    </div>
+                    <div class="key-row">
+                        <button class="key num" data-value="4">4</button>
+                        <button class="key num" data-value="5">5</button>
+                        <button class="key num" data-value="6">6</button>
+                        <button class="key op" data-value="×">×</button>
+                    </div>
+                    <div class="key-row">
+                        <button class="key num" data-value="1">1</button>
+                        <button class="key num" data-value="2">2</button>
+                        <button class="key num" data-value="3">3</button>
+                        <button class="key op" data-value="−">−</button>
+                    </div>
+                    <div class="key-row">
+                        <button class="key num" data-value="0">0</button>
+                        <button class="key num" data-value=".">.</button>
+                        <button class="key op" data-value="%">%</button>
+                        <button class="key op" data-value="+">+</button>
+                    </div>
+                    <div class="key-row">
+                        <button class="key func" data-action="negate">±</button>
+                        <button class="key func" data-action="clear">AC</button>
+                        <button class="key func" data-action="backspace"><i class="fas fa-delete-left"></i></button>
+                        <button class="key equals" data-action="equals">=</button>
+                    </div>
+                </div>
+                <div class="keyboard-indicator"><i class="fas fa-keyboard"></i> ⌨ Papan Ketik Siap</div>
+            </section>
+        </div>
+
+        <!-- ============================================================
+        FOOTER
+        ============================================================ -->
+        <footer class="footer">
+            <div class="footer-left">
+                <span class="footer-level" id="footerLevel">⚔ LEVEL 01</span>
+                <span class="footer-title" id="footerTitle">Ksatria Pemula</span>
+            </div>
+            <div class="footer-center">
+                <span class="footer-achievements" id="footerAchievements">🏆 0</span>
+                <span class="footer-group">👥 Dwi Fatur Danis Raka</span>
+            </div>
+            <div class="footer-right">
+                <span class="footer-keyboard"><i class="fas fa-keyboard"></i> ⌨</span>
+                <span class="footer-version">v2.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ============================================================
+    HISTORY PANEL
+    ============================================================ -->
+    <div class="history-overlay" id="historyOverlay"></div>
+    <aside class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h2><i class="fas fa-scroll"></i> Riwayat Petualangan</h2>
+            <button class="history-close" id="historyClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="history-actions">
+            <button class="history-clear-all" id="historyClearAll">🗑 Hapus Semua</button>
+        </div>
+        <ul class="history-list" id="historyList">
+            <li class="history-empty">Belum ada petualangan...</li>
+        </ul>
+    </aside>
+
+    <!-- ============================================================
+    SETTINGS MODAL
+    ============================================================ -->
+    <div class="modal-overlay" id="settingsOverlay"></div>
+    <div class="modal" id="settingsModal">
+        <div class="modal-header">
+            <h2><i class="fas fa-cog"></i> Pengaturan</h2>
+            <button class="modal-close" id="settingsClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="setting-group">
+                <label>Tema</label>
+                <div class="setting-toggle">
+                    <button class="toggle-btn" data-setting="theme" data-value="dark">🌙 Gelap</button>
+                    <button class="toggle-btn" data-setting="theme" data-value="light">☀️ Terang</button>
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Suara</label>
+                <div class="setting-toggle">
+                    <button class="toggle-btn" data-setting="sound" data-value="on">🔊 NYALA</button>
+                    <button class="toggle-btn" data-setting="sound" data-value="off">🔇 MATI</button>
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Animasi</label>
+                <div class="setting-toggle">
+                    <button class="toggle-btn" data-setting="animation" data-value="on">✨ NYALA</button>
+                    <button class="toggle-btn" data-setting="animation" data-value="off">⛔ MATI</button>
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Getaran</label>
+                <div class="setting-toggle">
+                    <button class="toggle-btn" data-setting="vibration" data-value="on">📳 NYALA</button>
+                    <button class="toggle-btn" data-setting="vibration" data-value="off">⛔ MATI</button>
+                </div>
+            </div>
+            <div class="setting-group">
+                <label>Format Angka</label>
+                <select class="setting-select" id="numberFormat">
+                    <option value="comma">1.234,56</option>
+                    <option value="dot">1,234.56</option>
+                    <option value="space">1 234.56</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Desimal</label>
+                <select class="setting-select" id="decimalPlaces">
+                    <option value="auto">Otomatis</option>
+                    <option value="0">0</option><option value="2">2</option>
+                    <option value="4">4</option><option value="6">6</option><option value="8">8</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label>Atur Ulang Data</label>
+                <button class="danger-btn" id="resetDataBtn">⚠ RESET SEMUA DATA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    ACHIEVEMENT TOAST
+    ============================================================ -->
+    <div class="achievement-toast" id="achievementToast">
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-content">
+            <div class="achievement-title">PRESTASI TERBUKA</div>
+            <div class="achievement-name" id="achievementName">Perhitungan Pertama</div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    LEVEL UP OVERLAY
+    ============================================================ -->
+    <div class="level-up-overlay" id="levelUpOverlay">
+        <div class="level-up-content">
+            <div class="level-up-icon">⚔</div>
+            <div class="level-up-title">NAIK LEVEL!</div>
+            <div class="level-up-desc" id="levelUpDesc">Kamu sekarang Ksatria Kubus!</div>
+            <div class="level-up-level" id="levelUpLevel">LEVEL 02</div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT – SEMUA LOGIKA KALKULATOR
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ---- DOM refs ----
+            const displayExpr = document.getElementById('expression');
+            const displayResult = document.getElementById('result');
+            const displayMode = document.getElementById('displayMode');
+            const memoryIndicator = document.getElementById('memoryValue');
+            const knightSpeech = document.querySelector('.speech-bubble');
+            const knightLevel = document.getElementById('knightLevel');
+            const xpFill = document.getElementById('xpFill');
+            const xpText = document.getElementById('xpText');
+            const footerLevel = document.getElementById('footerLevel');
+            const footerTitle = document.getElementById('footerTitle');
+            const footerAchievements = document.getElementById('footerAchievements');
+
+            // ---- State ----
+            let currentInput = '0';
+            let previousInput = '';
+            let operator = null;
+            let shouldResetDisplay = false;
+            let memory = 0;
+            let hasMemory = false;
+            let history = [];
+            let xp = 0;
+            let level = 1;
+            let achievements = [];
+            let currentMode = 'basic';
+            let soundEnabled = false;
+            let theme = 'dark';
+            let animationEnabled = true;
+            let vibrationEnabled = false;
+            let numberFormat = 'comma';
+            let decimalPlaces = 'auto';
+            let expression = '';
+
+            // ---- Level titles ----
+            const levelTitles = [
+                'Ksatria Pemula',
+                'Kubus Magang',
+                'Kubus Pejuang',
+                'Ksatria Kristal',
+                'Ksatria Bayangan',
+                'Ksatria Kerajaan',
+                'Ksatria Kubus Legendaris',
+                'Master Angka'
+            ];
+
+            function xpForLevel(lvl) { return lvl * 100; }
+
+            // ---- Helpers ----
+            function formatNumber(num) {
+                if (num === undefined || num === null || isNaN(num)) return '0';
+                let str = String(num);
+                if (Math.abs(num) > 1e15 || (Math.abs(num) < 1e-10 && num !== 0)) {
+                    return num.toExponential(6);
+                }
+                let parts = str.split('.');
+                let intPart = parts[0];
+                let decPart = parts[1] || '';
+                if (decimalPlaces !== 'auto') {
+                    let dp = parseInt(decimalPlaces);
+                    if (!isNaN(dp)) {
+                        num = parseFloat(num);
+                        if (!isNaN(num)) {
+                            str = num.toFixed(dp);
+                            parts = str.split('.');
+                            intPart = parts[0];
+                            decPart = parts[1] || '';
+                        }
+                    }
+                }
+                if (numberFormat === 'comma') {
+                    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                } else if (numberFormat === 'dot') {
+                    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                } else if (numberFormat === 'space') {
+                    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                }
+                return decPart ? intPart + ',' + decPart : intPart;
+            }
+
+            function parseNumber(str) {
+                let clean = str.replace(/[.,\s]/g, '');
+                if (clean === '') return 0;
+                return parseFloat(clean);
+            }
+
+            function updateDisplay() {
+                let val = currentInput;
+                if (val === 'Infinity' || val === '-Infinity' || val === 'NaN') {
+                    displayResult.textContent = 'ERROR';
+                    return;
+                }
+                let num = parseFloat(val);
+                if (!isNaN(num)) {
+                    displayResult.textContent = formatNumber(num);
+                } else {
+                    displayResult.textContent = val;
+                }
+                displayExpr.textContent = expression || '';
+            }
+
+            function updateMemory() {
+                memoryIndicator.textContent = hasMemory ? memory : '0';
+            }
+
+            function speak(msg) {
+                knightSpeech.textContent = '⚔ ' + msg;
+            }
+
+            // ---- Sound (Web Audio) ----
+            let audioCtx = null;
+
+            function playTone(freq, duration, type = 'sine') {
+                if (!soundEnabled) return;
+                try {
+                    if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            function soundClick() { playTone(800, 0.08); }
+
+            function soundOp() { playTone(600, 0.1); }
+
+            function soundEqual() { playTone(1000, 0.15); }
+
+            function soundError() { playTone(200, 0.3, 'sawtooth'); }
+
+            function soundAchievement() { playTone(1200, 0.1);
+                setTimeout(() => playTone(1500, 0.1), 120); }
+
+            function soundLevelUp() { playTone(800, 0.1);
+                setTimeout(() => playTone(1000, 0.1), 130);
+                setTimeout(() => playTone(1200, 0.15), 260); }
+
+            // ---- XP & Level ----
+            function addXP(amount) {
+                xp += amount;
+                let maxXP = xpForLevel(level);
+                while (xp >= maxXP) {
+                    xp -= maxXP;
+                    level++;
+                    maxXP = xpForLevel(level);
+                    showLevelUp();
+                    soundLevelUp();
+                    checkAchievements();
+                    speak('NAIK LEVEL!');
+                }
+                updateXPDisplay();
+                saveState();
+            }
+
+            function updateXPDisplay() {
+                let maxXP = xpForLevel(level);
+                let pct = Math.min(100, (xp / maxXP) * 100);
+                xpFill.style.width = pct + '%';
+                xpText.textContent = xp + ' / ' + maxXP + ' XP';
+                let title = levelTitles[Math.min(level - 1, levelTitles.length - 1)] || 'Ksatria Legendaris';
+                knightLevel.textContent = 'LEVEL ' + String(level).padStart(2, '0');
+                footerLevel.textContent = '⚔ LEVEL ' + String(level).padStart(2, '0');
+                footerTitle.textContent = title;
+            }
+
+            // ---- Achievements ----
+            const achievementList = [
+                { id: 'first_calc', name: 'Perhitungan Pertama', desc: 'Melakukan perhitungan pertama.', check: () =>
+                        history.length >= 1 },
+                { id: 'speed_knight', name: 'Ksatria Cepat', desc: 'Melakukan 10 perhitungan.', check: () =>
+                        history.length >= 10 },
+                { id: 'math_warrior', name: 'Prajurit Matematika', desc: 'Melakukan 100 perhitungan.', check: () =>
+                        history.length >= 100 },
+                { id: 'science_knight', name: 'Ksatria Sains', desc: 'Menggunakan kalkulator ilmiah.', check: () =>
+                        localStorage.getItem('sci_used') === 'true' },
+                { id: 'cube_master', name: 'Master Kubus', desc: 'Mencapai Level 10.', check: () => level >= 10 },
+            ];
+
+            function checkAchievements() {
+                let unlocked = false;
+                achievementList.forEach(a => {
+                    if (!achievements.includes(a.id) && a.check()) {
+                        achievements.push(a.id);
+                        unlocked = true;
+                        showAchievement(a.name);
+                        soundAchievement();
+                    }
+                });
+                if (unlocked) {
+                    saveState();
+                    updateFooterAchievements();
+                }
+            }
+
+            function showAchievement(name) {
+                const toast = document.getElementById('achievementToast');
+                document.getElementById('achievementName').textContent = name;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            function updateFooterAchievements() {
+                footerAchievements.textContent = '🏆 ' + achievements.length;
+            }
+
+            // ---- Level Up overlay ----
+            function showLevelUp() {
+                const overlay = document.getElementById('levelUpOverlay');
+                const desc = document.getElementById('levelUpDesc');
+                const lvl = document.getElementById('levelUpLevel');
+                let title = levelTitles[Math.min(level - 1, levelTitles.length - 1)] || 'Ksatria Legendaris';
+                desc.textContent = 'Kamu sekarang ' + title + '!';
+                lvl.textContent = 'LEVEL ' + String(level).padStart(2, '0');
+                overlay.classList.add('active');
+                setTimeout(() => overlay.classList.remove('active'), 2500);
+            }
+
+            // ---- History ----
+            function addHistory(expr, result) {
+                history.push({ expr, result });
+                if (history.length > 100) history.shift();
+                saveState();
+                renderHistory();
+            }
+
+            function renderHistory() {
+                const list = document.getElementById('historyList');
+                list.innerHTML = '';
+                if (history.length === 0) {
+                    list.innerHTML = '<li class="history-empty">Belum ada petualangan...</li>';
+                    return;
+                }
+                history.slice().reverse().forEach((item, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = `
+                        <span class="h-expr">${item.expr}</span>
+                        <span class="h-result">= ${item.result}</span>
+                        <button class="h-del" data-idx="${history.length - 1 - idx}"><i class="fas fa-times"></i></button>
+                    `;
+                    li.addEventListener('click', (e) => {
+                        if (e.target.closest('.h-del')) return;
+                        currentInput = String(item.result);
+                        expression = '';
+                        updateDisplay();
+                        speak('Memuat hasil sebelumnya');
+                    });
+                    const delBtn = li.querySelector('.h-del');
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const idx = parseInt(delBtn.dataset.idx);
+                        history.splice(idx, 1);
+                        saveState();
+                        renderHistory();
+                    });
+                    list.appendChild(li);
+                });
+            }
+
+            // ---- Memory ----
+            function memoryStore() {
+                let val = parseFloat(currentInput);
+                if (!isNaN(val)) { memory = val;
+                    hasMemory = true;
+                    updateMemory();
+                    speak('Disimpan ke memori'); }
+            }
+
+            function memoryRecall() {
+                if (hasMemory) { currentInput = String(memory);
+                    updateDisplay();
+                    speak('Memori dipanggil'); }
+            }
+
+            function memoryAdd() {
+                let val = parseFloat(currentInput);
+                if (!isNaN(val)) { memory += val;
+                    hasMemory = true;
+                    updateMemory();
+                    speak('Ditambahkan ke memori'); }
+            }
+
+            function memorySubtract() {
+                let val = parseFloat(currentInput);
+                if (!isNaN(val)) { memory -= val;
+                    hasMemory = true;
+                    updateMemory();
+                    speak('Dikurangi dari memori'); }
+            }
+
+            function memoryClear() {
+                hasMemory = false;
+                memory = 0;
+                updateMemory();
+                speak('Memori dihapus');
+            }
+
+            // ---- Calculator engine ----
+            function calculate(op, a, b) {
+                switch (op) {
+                    case '+':
+                        return a + b;
+                    case '−':
+                        return a - b;
+                    case '×':
+                        return a * b;
+                    case '÷':
+                        return b !== 0 ? a / b : 'ERROR';
+                    case '%':
+                        return a % b;
+                    default:
+                        return b;
+                }
+            }
+
+            function evaluateExpression(expr) {
+                try {
+                    let sanitized = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+                    if (!/^[\d+\-*/().% ]+$/.test(sanitized)) return 'ERROR';
+                    let result = Function('"use strict"; return (' + sanitized + ')')();
+                    if (typeof result !== 'number' || !isFinite(result)) return 'ERROR';
+                    return result;
+                } catch (e) {
+                    return 'ERROR';
+                }
+            }
+
+            // ---- Input handling ----
+            function inputDigit(digit) {
+                if (shouldResetDisplay) {
+                    currentInput = '0';
+                    shouldResetDisplay = false;
+                }
+                if (currentInput === '0' && digit !== '.') {
+                    currentInput = digit;
+                } else {
+                    if (digit === '.' && currentInput.includes('.')) return;
+                    currentInput += digit;
+                }
+                updateDisplay();
+            }
+
+            function inputOperator(op) {
+                if (operator && !shouldResetDisplay) {
+                    let prev = parseFloat(previousInput);
+                    let curr = parseFloat(currentInput);
+                    if (!isNaN(prev) && !isNaN(curr)) {
+                        let result = calculate(operator, prev, curr);
+                        if (result === 'ERROR') {
+                            speak('Kesalahan!');
+                            soundError();
+                            return;
+                        }
+                        currentInput = String(result);
+                        expression = previousInput + ' ' + operator + ' ' + currentInput;
+                        updateDisplay();
+                        previousInput = currentInput;
+                        operator = op;
+                        shouldResetDisplay = true;
+                        soundOp();
+                        return;
+                    }
+                }
+                previousInput = currentInput;
+                operator = op;
+                expression = currentInput + ' ' + op + ' ';
+                shouldResetDisplay = true;
+                soundOp();
+                updateDisplay();
+            }
+
+            function inputEquals() {
+                if (!operator) {
+                    if (expression) {
+                        let result = evaluateExpression(expression);
+                        if (result === 'ERROR') {
+                            speak('Ups! Periksa persamaanmu.');
+                            soundError();
+                            return;
+                        }
+                        let resStr = String(result);
+                        addHistory(expression, resStr);
+                        currentInput = resStr;
+                        expression = '';
+                        updateDisplay();
+                        soundEqual();
+                        addXP(10);
+                        speak('Perhitungan siap!');
+                        checkAchievements();
+                        return;
+                    }
+                    return;
+                }
+                let prev = parseFloat(previousInput);
+                let curr = parseFloat(currentInput);
+                if (isNaN(prev) || isNaN(curr)) {
+                    speak('Ups! Periksa persamaanmu.');
+                    soundError();
+                    return;
+                }
+                let result = calculate(operator, prev, curr);
+                if (result === 'ERROR') {
+                    speak('Gerakan mustahil! (÷0)');
+                    soundError();
+                    currentInput = 'ERROR';
+                    updateDisplay();
+                    return;
+                }
+                let expr = previousInput + ' ' + operator + ' ' + currentInput;
+                let resStr = String(result);
+                addHistory(expr, resStr);
+                currentInput = resStr;
+                expression = '';
+                operator = null;
+                previousInput = '';
+                shouldResetDisplay = true;
+                updateDisplay();
+                soundEqual();
+                addXP(10);
+                speak('Perhitungan siap!');
+                checkAchievements();
+            }
+
+            function inputClear() {
+                currentInput = '0';
+                previousInput = '';
+                operator = null;
+                expression = '';
+                shouldResetDisplay = false;
+                updateDisplay();
+                speak('Dibersihkan');
+            }
+
+            function inputBackspace() {
+                if (shouldResetDisplay) return;
+                if (currentInput.length > 1) {
+                    currentInput = currentInput.slice(0, -1);
+                } else {
+                    currentInput = '0';
+                }
+                updateDisplay();
+            }
+
+            function inputNegate() {
+                if (currentInput === '0') return;
+                if (currentInput.startsWith('-')) {
+                    currentInput = currentInput.slice(1);
+                } else {
+                    currentInput = '-' + currentInput;
+                }
+                updateDisplay();
+            }
+
+            function inputPercent() {
+                let val = parseFloat(currentInput);
+                if (!isNaN(val)) {
+                    currentInput = String(val / 100);
+                    updateDisplay();
+                }
+            }
+
+            // ---- Scientific functions ----
+            function applyScientific(fn) {
+                let val = parseFloat(currentInput);
+                if (isNaN(val)) { speak('Masukkan angka'); return; }
+                let result;
+                switch (fn) {
+                    case 'sqrt':
+                        result = Math.sqrt(val);
+                        break;
+                    case 'square':
+                        result = val * val;
+                        break;
+                    case 'cube':
+                        result = val * val * val;
+                        break;
+                    case 'power':
+                        let p = parseFloat(prompt('Masukkan pangkat:', '2'));
+                        if (isNaN(p)) return;
+                        result = Math.pow(val, p);
+                        break;
+                    case 'inverse':
+                        result = 1 / val;
+                        break;
+                    case 'sin':
+                        result = Math.sin(val);
+                        break;
+                    case 'cos':
+                        result = Math.cos(val);
+                        break;
+                    case 'tan':
+                        result = Math.tan(val);
+                        break;
+                    case 'asin':
+                        result = Math.asin(val);
+                        break;
+                    case 'acos':
+                        result = Math.acos(val);
+                        break;
+                    case 'atan':
+                        result = Math.atan(val);
+                        break;
+                    case 'log':
+                        result = Math.log10(val);
+                        break;
+                    case 'ln':
+                        result = Math.log(val);
+                        break;
+                    case 'exp':
+                        result = Math.exp(val);
+                        break;
+                    case 'tenx':
+                        result = Math.pow(10, val);
+                        break;
+                    case 'factorial':
+                        if (val < 0 || !Number.isInteger(val)) { speak('Harus integer positif'); return; }
+                        let f = 1;
+                        for (let i = 2; i <= val; i++) f *= i;
+                        result = f;
+                        break;
+                    case 'mod':
+                        let m = parseFloat(prompt('Masukkan modulus:', '2'));
+                        if (isNaN(m)) return;
+                        result = val % m;
+                        break;
+                    case 'rand':
+                        result = Math.random();
+                        break;
+                    case 'abs':
+                        result = Math.abs(val);
+                        break;
+                    case 'pi':
+                        result = Math.PI;
+                        break;
+                    case 'euler':
+                        result = Math.E;
+                        break;
+                    case 'phi':
+                        result = 1.618033988749895;
+                        break;
+                    default:
+                        return;
+                }
+                if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+                    let expr = fn + '(' + currentInput + ')';
+                    currentInput = String(result);
+                    addHistory(expr, currentInput);
+                    updateDisplay();
+                    addXP(5);
+                    speak('Fungsi ilmiah digunakan');
+                    localStorage.setItem('sci_used', 'true');
+                    checkAchievements();
+                } else {
+                    speak('Hasil tidak valid');
+                    soundError();
+                }
+            }
+
+            // ---- Programmer ----
+            let currentBase = 'dec';
+
+            function setBase(base) {
+                currentBase = base;
+                document.querySelectorAll('.prog-base-btn').forEach(b => b.classList.toggle('active', b.dataset.base ===
+                    base));
+            }
+
+            function applyProgrammer(op) {
+                let a = parseInt(currentInput, 16);
+                if (isNaN(a)) { speak('Masukkan angka'); return; }
+                let b;
+                if (op !== 'NOT') {
+                    let inp = prompt('Masukkan angka kedua (hex):', '1');
+                    if (inp === null) return;
+                    b = parseInt(inp, 16);
+                    if (isNaN(b)) { speak('Angka tidak valid'); return; }
+                }
+                let result;
+                switch (op) {
+                    case 'AND':
+                        result = a & b;
+                        break;
+                    case 'OR':
+                        result = a | b;
+                        break;
+                    case 'XOR':
+                        result = a ^ b;
+                        break;
+                    case 'NOT':
+                        result = ~a;
+                        break;
+                    case 'SHL':
+                        result = a << b;
+                        break;
+                    case 'SHR':
+                        result = a >> b;
+                        break;
+                    default:
+                        return;
+                }
+                currentInput = String(result);
+                addHistory(op + '(' + a + ',' + (b !== undefined ? b : '') + ')', currentInput);
+                updateDisplay();
+                addXP(5);
+                speak('Operasi programmer');
+            }
+
+            // ---- Converter ----
+            const conversionRates = {
+                m: 1,
+                km: 1000,
+                cm: 0.01,
+                mm: 0.001,
+                mi: 1609.34,
+                ft: 0.3048,
+                in: 0.0254,
+                kg: 1,
+                g: 0.001,
+                lb: 0.453592,
+                c: 1,
+                f: 1,
+                k: 1,
+                l: 1,
+                gal: 3.78541,
+                s: 1,
+                min: 60,
+                h: 3600,
+                b: 1,
+                kb: 1024,
+                mb: 1048576,
+                gb: 1073741824,
+                j: 1,
+                cal: 4.184
+            };
+
+            function convertUnit(from, to, val) {
+                if (from === 'c' && to === 'f') return val * 9 / 5 + 32;
+                if (from === 'f' && to === 'c') return (val - 32) * 5 / 9;
+                if (from === 'c' && to === 'k') return val + 273.15;
+                if (from === 'k' && to === 'c') return val - 273.15;
+                if (from === 'f' && to === 'k') return (val - 32) * 5 / 9 + 273.15;
+                if (from === 'k' && to === 'f') return (val - 273.15) * 9 / 5 + 32;
+                if (from === to) return val;
+                let base = val * (conversionRates[from] || 1);
+                return base / (conversionRates[to] || 1);
+            }
+
+            function doConvert() {
+                const from = document.getElementById('convFrom').value;
+                const to = document.getElementById('convTo').value;
+                const input = document.getElementById('convInput');
+                let val = parseFloat(input.value);
+                if (isNaN(val)) { speak('Masukkan angka'); return; }
+                let result = convertUnit(from, to, val);
+                document.getElementById('convResult').textContent = '= ' + formatNumber(result);
+                speak('Konversi selesai');
+                addXP(3);
+            }
+
+            // ---- Mode switching ----
+            function setMode(mode) {
+                currentMode = mode;
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+                document.getElementById('sciPanel').classList.toggle('active', mode === 'scientific');
+                document.getElementById('progPanel').classList.toggle('active', mode === 'programmer');
+                document.getElementById('convPanel').classList.toggle('active', mode === 'converter');
+                const modeNames = { basic: 'DASAR', scientific: 'ILMIAH', programmer: 'PROGRAM', converter: 'KONVERSI' };
+                displayMode.textContent = modeNames[mode] || 'DASAR';
+                inputClear();
+                speak('Mode ' + modeNames[mode]);
+            }
+
+            // ---- Theme ----
+            function setTheme(t) {
+                theme = t;
+                document.body.classList.toggle('light', t === 'light');
+                document.getElementById('themeToggle').innerHTML = t === 'light' ? '<i class="fas fa-sun"></i>' :
+                    '<i class="fas fa-moon"></i>';
+                localStorage.setItem('theme', t);
+            }
+
+            // ---- Sound toggle ----
+            function toggleSound() {
+                soundEnabled = !soundEnabled;
+                document.getElementById('soundToggle').innerHTML = soundEnabled ? '<i class="fas fa-volume-up"></i>' :
+                    '<i class="fas fa-volume-mute"></i>';
+                localStorage.setItem('sound', soundEnabled ? 'on' : 'off');
+                if (soundEnabled) speak('Suara aktif');
+                else speak('Suara mati');
+            }
+
+            // ---- Settings UI ----
+            function openSettings() {
+                document.getElementById('settingsOverlay').classList.add('active');
+                document.getElementById('settingsModal').classList.add('active');
+                document.querySelectorAll('.toggle-btn[data-setting="theme"]').forEach(b => b.classList.toggle('active',
+                    b.dataset.value === theme));
+                document.querySelectorAll('.toggle-btn[data-setting="sound"]').forEach(b => b.classList.toggle('active',
+                    b.dataset.value === (soundEnabled ? 'on' : 'off')));
+                document.querySelectorAll('.toggle-btn[data-setting="animation"]').forEach(b => b.classList.toggle('active',
+                    b.dataset.value === (animationEnabled ? 'on' : 'off')));
+                document.querySelectorAll('.toggle-btn[data-setting="vibration"]').forEach(b => b.classList.toggle('active',
+                    b.dataset.value === (vibrationEnabled ? 'on' : 'off')));
+                document.getElementById('numberFormat').value = numberFormat;
+                document.getElementById('decimalPlaces').value = decimalPlaces;
+            }
+
+            function closeSettings() {
+                document.getElementById('settingsOverlay').classList.remove('active');
+                document.getElementById('settingsModal').classList.remove('active');
+            }
+
+            // ---- Save / Load ----
+            function saveState() {
+                try {
+                    const data = { history, xp, level, achievements, memory, hasMemory,
+                        currentInput, previousInput, operator, expression, shouldResetDisplay };
+                    localStorage.setItem('cak_data', JSON.stringify(data));
+                    localStorage.setItem('cak_theme', theme);
+                    localStorage.setItem('cak_sound', soundEnabled ? 'on' : 'off');
+                    localStorage.setItem('cak_anim', animationEnabled ? 'on' : 'off');
+                    localStorage.setItem('cak_vibrate', vibrationEnabled ? 'on' : 'off');
+                    localStorage.setItem('cak_format', numberFormat);
+                    localStorage.setItem('cak_decimal', decimalPlaces);
+                } catch (e) {}
+            }
+
+            function loadState() {
+                try {
+                    const raw = localStorage.getItem('cak_data');
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        history = data.history || [];
+                        xp = data.xp || 0;
+                        level = data.level || 1;
+                        achievements = data.achievements || [];
+                        memory = data.memory || 0;
+                        hasMemory = data.hasMemory || false;
+                        currentInput = data.currentInput || '0';
+                        previousInput = data.previousInput || '';
+                        operator = data.operator || null;
+                        expression = data.expression || '';
+                        shouldResetDisplay = data.shouldResetDisplay || false;
+                    }
+                    theme = localStorage.getItem('cak_theme') || 'dark';
+                    soundEnabled = localStorage.getItem('cak_sound') === 'on';
+                    animationEnabled = localStorage.getItem('cak_anim') !== 'off';
+                    vibrationEnabled = localStorage.getItem('cak_vibrate') === 'on';
+                    numberFormat = localStorage.getItem('cak_format') || 'comma';
+                    decimalPlaces = localStorage.getItem('cak_decimal') || 'auto';
+                } catch (e) {}
+                setTheme(theme);
+                document.getElementById('soundToggle').innerHTML = soundEnabled ? '<i class="fas fa-volume-up"></i>' :
+                    '<i class="fas fa-volume-mute"></i>';
+                updateXPDisplay();
+                updateMemory();
+                updateFooterAchievements();
+                renderHistory();
+                updateDisplay();
+                setMode('basic');
+            }
+
+            // ---- Reset ----
+            function resetAll() {
+                if (!confirm('Yakin ingin mereset semua data? Histori, XP, level, dan prestasi akan hilang.')) return;
+                localStorage.removeItem('cak_data');
+                localStorage.removeItem('cak_theme');
+                localStorage.removeItem('cak_sound');
+                localStorage.removeItem('cak_anim');
+                localStorage.removeItem('cak_vibrate');
+                localStorage.removeItem('cak_format');
+                localStorage.removeItem('cak_decimal');
+                localStorage.removeItem('sci_used');
+                history = [];
+                xp = 0;
+                level = 1;
+                achievements = [];
+                memory = 0;
+                hasMemory = false;
+                currentInput = '0';
+                previousInput = '';
+                operator = null;
+                expression = '';
+                shouldResetDisplay = false;
+                updateXPDisplay();
+                updateMemory();
+                updateFooterAchievements();
+                renderHistory();
+                updateDisplay();
+                speak('Data telah direset');
+                closeSettings();
+            }
+
+            // ---- Keyboard support ----
+            document.addEventListener('keydown', (e) => {
+                const key = e.key;
+                if (key >= '0' && key <= '9') { e.preventDefault();
+                    inputDigit(key);
+                    soundClick(); } else if (key === '.') { e.preventDefault();
+                    inputDigit('.');
+                    soundClick(); } else if (key === '+') { e.preventDefault();
+                    inputOperator('+'); } else if (key === '-') { e.preventDefault();
+                    inputOperator('−'); } else if (key === '*') { e.preventDefault();
+                    inputOperator('×'); } else if (key === '/') { e.preventDefault();
+                    inputOperator('÷'); } else if (key === 'Enter' || key === '=') { e.preventDefault();
+                    inputEquals(); } else if (key === 'Escape') { e.preventDefault();
+                    inputClear(); } else if (key === 'Backspace') { e.preventDefault();
+                    inputBackspace(); } else if (key === '%') { e.preventDefault();
+                    inputPercent(); }
+            });
+
+            // ---- Init ----
+            function init() {
+                loadState();
+                // UI event listeners
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.addEventListener('click', () => setMode(btn.dataset.mode));
+                });
+
+                document.querySelectorAll('.key.num').forEach(btn => {
+                    btn.addEventListener('click', () => { inputDigit(btn.dataset.value);
+                        soundClick(); });
+                });
+                document.querySelectorAll('.key.op').forEach(btn => {
+                    btn.addEventListener('click', () => { inputOperator(btn.dataset.value); });
+                });
+                document.querySelector('.key.equals').addEventListener('click', inputEquals);
+                document.querySelector('.key.func[data-action="clear"]').addEventListener('click', inputClear);
+                document.querySelector('.key.func[data-action="backspace"]').addEventListener('click', inputBackspace);
+                document.querySelector('.key.func[data-action="negate"]').addEventListener('click', inputNegate);
+                document.querySelector('.key[data-value="%"]').addEventListener('click', inputPercent);
+
+                document.querySelectorAll('.key.mem').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const action = btn.dataset.action;
+                        if (action === 'mc') memoryClear();
+                        else if (action === 'mr') memoryRecall();
+                        else if (action === 'mplus') memoryAdd();
+                        else if (action === 'mminus') memorySubtract();
+                    });
+                });
+
+                // Scientific
+                document.querySelectorAll('.sci-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const fn = btn.dataset.fn;
+                        applyScientific(fn);
+                    });
+                });
+
+                // Programmer
+                document.querySelectorAll('.prog-bit').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        inputDigit(btn.dataset.bit);
+                    });
+                });
+                document.querySelectorAll('.prog-op').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        applyProgrammer(btn.dataset.op);
+                    });
+                });
+                document.querySelectorAll('.prog-base-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        setBase(btn.dataset.base);
+                        speak('Base ' + btn.dataset.base.toUpperCase());
+                    });
+                });
+
+                // Converter
+                document.getElementById('convConvert').addEventListener('click', doConvert);
+                document.getElementById('convInput').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') doConvert();
+                });
+
+                // History
+                document.getElementById('historyBtn').addEventListener('click', () => {
+                    document.getElementById('historyPanel').classList.add('active');
+                    document.getElementById('historyOverlay').classList.add('active');
+                });
+                document.getElementById('historyClose').addEventListener('click', () => {
+                    document.getElementById('historyPanel').classList.remove('active');
+                    document.getElementById('historyOverlay').classList.remove('active');
+                });
+                document.getElementById('historyOverlay').addEventListener('click', () => {
+                    document.getElementById('historyPanel').classList.remove('active');
+                    document.getElementById('historyOverlay').classList.remove('active');
+                });
+                document.getElementById('historyClearAll').addEventListener('click', () => {
+                    if (confirm('Hapus semua riwayat?')) {
+                        history = [];
+                        saveState();
+                        renderHistory();
+                        speak('Riwayat dihapus');
+                    }
+                });
+
+                // Settings
+                document.getElementById('settingsBtn').addEventListener('click', openSettings);
+                document.getElementById('settingsShortcut').addEventListener('click', openSettings);
+                document.getElementById('settingsClose').addEventListener('click', closeSettings);
+                document.getElementById('settingsOverlay').addEventListener('click', closeSettings);
+
+                document.querySelectorAll('.toggle-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const setting = btn.dataset.setting;
+                        const val = btn.dataset.value;
+                        if (setting === 'theme') { setTheme(val);
+                            saveState(); } else if (setting === 'sound') { soundEnabled = (val === 'on');
+                            toggleSound();
+                            saveState(); } else if (setting === 'animation') { animationEnabled = (val ===
+                                'on');
+                            saveState(); } else if (setting === 'vibration') { vibrationEnabled = (val ===
+                                'on');
+                            saveState(); }
+                        document.querySelectorAll(`.toggle-btn[data-setting="${setting}"]`).forEach(b => b
+                            .classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                });
+
+                document.getElementById('numberFormat').addEventListener('change', (e) => {
+                    numberFormat = e.target.value;
+                    saveState();
+                    updateDisplay();
+                });
+                document.getElementById('decimalPlaces').addEventListener('change', (e) => {
+                    decimalPlaces = e.target.value;
+                    saveState();
+                    updateDisplay();
+                });
+                document.getElementById('resetDataBtn').addEventListener('click', resetAll);
+
+                // Theme toggle in header
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    setTheme(theme === 'dark' ? 'light' : 'dark');
+                    saveState();
+                });
+                document.getElementById('soundToggle').addEventListener('click', toggleSound);
+
+                speak('Siap, ksatria!');
+                checkAchievements();
+            }
+
+            // run
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+</body>
+</html>
